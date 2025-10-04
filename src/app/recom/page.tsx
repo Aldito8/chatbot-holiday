@@ -2,6 +2,7 @@
 
 import { Upload, X, Compass, MapPin, ServerCrash } from 'lucide-react';
 import { useState } from 'react';
+import Image from 'next/image'; 
 
 type HolidayDestination = {
     nama_tempat: string;
@@ -26,7 +27,7 @@ export default function Recommendation() {
 
     const createMapUrl = (name: string, location: string) => {
         const query = encodeURIComponent(`${name}, ${location}`);
-        return `https://www.google.com/maps?q=...{query}`;
+        return `https://www.google.com/maps/search/?api=1&query=${query}`;
     };
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -71,8 +72,12 @@ export default function Recommendation() {
             else if (data.fallback) setFallbackMessage(JSON.parse(data.fallback));
             else if (data.error) setError(data.error);
             else setError("Format respons dari server tidak dikenali.");
-        } catch (err: any) {
-            setError(err.message || 'Terjadi kesalahan. Coba lagi.');
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                setError(err.message);
+            } else {
+                setError('Terjadi kesalahan. Coba lagi.');
+            }
         } finally {
             setLoading(false);
         }
@@ -99,9 +104,15 @@ export default function Recommendation() {
                         />
 
                         {preview ? (
-                            <div className="relative group">
-                                <img src={preview} alt="Preview" className="w-full h-auto max-h-60 object-cover rounded-lg" />
-                                <button onClick={handleRemoveImage} type="button" className="absolute top-2 right-2 bg-black/60 text-white rounded-full p-1.5">
+                            <div className="relative group w-full h-60">
+                                <Image
+                                    src={preview}
+                                    alt="Preview"
+                                    fill
+                                    style={{ objectFit: 'cover' }}
+                                    className="rounded-lg"
+                                />
+                                <button onClick={handleRemoveImage} type="button" className="absolute top-2 right-2 bg-black/60 text-white rounded-full p-1.5 z-10">
                                     <X size={20} />
                                 </button>
                             </div>

@@ -6,9 +6,15 @@ if (!process.env.GEMINI_API_KEY) {
 }
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
-const isValidRecommendation = (item: any): boolean => {
+type Recommendation = {
+    nama_tempat: string;
+    deskripsi: string;
+    lokasi: string;
+};
+
+const isValidRecommendation = (item: Recommendation): boolean => {
     return (
         typeof item.nama_tempat === 'string' &&
         typeof item.deskripsi === 'string' &&
@@ -24,7 +30,7 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Harus ada prompt atau image" }, { status: 400 });
         }
 
-        let fullPrompt = `
+        const fullPrompt = `
         Anda adalah seorang pakar perjalanan yang sangat detail.
         Berikan saya 3 rekomendasi tempat liburan yang sesuai dengan deskripsi dan/atau gambar yang diberikan.
         Lokasi prioritas adalah ${location || "Indonesia"}.
@@ -62,7 +68,6 @@ export async function POST(req: NextRequest) {
             result = await model.generateContent(fullPrompt);
         }
 
-
         const responseText = result.response.text();
         try {
             const jsonString = responseText.replace(/```json|```/g, "").trim();
@@ -73,7 +78,7 @@ export async function POST(req: NextRequest) {
             } else {
                 return NextResponse.json({ fallback: `${jsonString}` });
             }
-        } catch (error) {
+        } catch {
             return NextResponse.json({ fallback: responseText });
         }
 
